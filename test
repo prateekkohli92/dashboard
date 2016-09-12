@@ -1,0 +1,244 @@
+dt=`date --date="1 days ago" +%Y%m%d`
+
+home="/home/prateek/Desktop/Queries2/FULL"
+SCRIPT=$(readlink -f $0)
+src=`dirname $SCRIPT`
+
+cp /home/prateek/Desktop/Queries2/processing/real_$dt.csv $home/real_$dt.csv
+cp /home/prateek/Desktop/Queries2/processing/real_partial_$dt.csv $home/real_partial_$dt.csv
+cp /home/prateek/Desktop/Queries2/processing/real_zero_$dt.csv $home/real_zero_$dt.csv
+
+sed -i 1i"dt,keyword,visits,clicks,orders" real_$dt.csv
+sed -i 1i"keyword,visits" real_partial_$dt.csv
+sed -i 1i"keyword,visits" real_zero_$dt.csv
+
+
+SPARK_HOME="/home/prateek/Downloads/spark-1.4.0-bin-hadoop2.6"
+export loc="$home/real_$dt_2.csv"
+export loc1="$home/reqdDate2.csv"
+export loc2="$home/real_partial_$dt_2.csv"
+export loc3="$home/real_zero_$dt_2.csv"
+
+#create interim files
+cat "$home/real_$dt.csv" > "$loc"
+cat "$home/reqdDate.csv" > "$loc1"
+cat "$home/real_partial_$dt.csv" > "$loc2"
+cat "$home/real_zero_$dt.csv" > "$loc3"
+
+
+$SPARK_HOME/bin/spark-submit   --driver-memory 5g  --class "Full"  --packages com.databricks:spark-csv_2.10:1.2.0   $src/simple-project_2.10-1.0.jar "$loc" "$loc1" "$loc2" "$loc3"
+
+
+cd pk2
+cat p* > all_$dt.csv
+mv ./all_$dt.csv ../all_$dt.csv
+cd ..
+
+cd results
+cat p* > overall.csv
+mv ./overall.csv ../overall.csv
+cd ..
+
+cd zero_ctr_metrics
+cat p* > zcm.csv
+mv ./zcm.csv ../zcm.csv
+cd ..
+
+
+cd bad_metrics
+cat p* > bad.csv
+mv ./bad.csv ../bad.csv
+cd ..
+
+
+cd good_metrics
+cat p* > good.csv
+mv ./good.csv ../good.csv
+cd ..
+
+
+cd medium_metrics
+cat p* > medium.csv
+mv ./medium.csv ../medium.csv
+cd ..
+
+
+cd tenm_metrics
+cat p* > ten.csv
+mv ./ten.csv ../ten.csv
+cd ..
+
+
+cd ten_good_metrics
+cat p* > ten_good.csv
+mv ./ten_good.csv ../ten_good.csv
+cd ..
+
+
+cd ten_bad_metrics
+cat p* > ten_bad.csv
+mv ./ten_bad.csv ../ten_bad.csv
+cd ..
+
+
+
+cd ten_med_metrics
+cat p* > ten_med.csv
+mv ./ten_med.csv ../ten_med.csv
+cd ..
+
+
+cd fiftym_metrics
+cat p* > fifty.csv
+mv ./fifty.csv ../fifty.csv
+cd ..
+
+cd fifty_good_metrics
+cat p* > fifty_good.csv
+mv ./fifty_good.csv ../fifty_good.csv
+cd ..
+
+
+cd fifty_bad_metrics
+cat p* > fifty_bad.csv
+mv ./fifty_bad.csv ../fifty_bad.csv
+cd ..
+
+cd fifty_med_metrics
+cat p* > fifty_med.csv
+mv ./fifty_med.csv ../fifty_med.csv
+cd ..
+
+
+cd ten_zero_ctr_metrics
+cat p* > tzcm.csv
+mv ./tzcm.csv ../tzcm.csv
+cd ..
+
+
+cd fifty_zero_ctr_metrics
+cat p* > fzcm.csv
+mv ./fzcm.csv ../fzcm.csv
+cd ..
+
+
+cd partial_metrics
+cat p* > partial.csv
+mv ./partial.csv ../partial.csv
+cd ..
+
+
+cd ten_partial_metrics
+cat p* > ten_partial.csv
+mv ./ten_partial.csv ../ten_partial.csv
+cd ..
+
+
+cd fifty_partial_metrics
+cat p* > fifty_partial.csv
+mv ./fifty_partial.csv ../fifty_partial.csv
+cd ..
+
+
+cd zero_metrics
+cat p* > zero_metrics.csv
+mv ./zero_metrics.csv ../zero_metrics.csv
+cd ..
+
+
+cd ten_zero_metrics
+cat p* > tzm.csv
+mv ./tzm.csv ../tzm.csv
+cd ..
+
+
+cd fifty_zero_metrics
+cat p* > fzm.csv
+mv ./fzm.csv ../fzm.csv
+cd ..
+
+
+cat overall.csv ten.csv fifty.csv good.csv bad.csv medium.csv partial.csv zcm.csv zero_metrics.csv > relevancy.csv
+
+cat ten_good.csv ten_med.csv ten_bad.csv ten_partial.csv tzcm.csv tzm.csv fifty_good.csv fifty_med.csv fifty_bad.csv fifty_partial.csv fzcm.csv fzm.csv > relevancy2.csv
+
+cat relevancy.csv relevancy2.csv > full_relevancy_$dt.csv
+
+
+rm -rf results
+rm -rf fifty*
+rm -rf ten*
+rm -rf bad*
+rm -rf good*
+rm -rf medium*
+rm -rf zero*
+rm -rf partial_metrics
+rm -rf partial_queries
+rm fz*
+rm partial.csv
+rm real_.csv
+rm real_partial_.csv
+rm real_zero_.csv
+rm relevancy.csv
+rm relevancy2.csv
+rm reqdDate2.csv
+rm tz*
+rm zc*
+rm real*
+rm overall.csv
+rm -rf partial_queries_flag
+
+sed -i 1i"dt,keyword,visits,orders,clicks,partial_visits,zero_result_visits" all_$dt.csv
+
+
+#formating the final report
+
+sed -i 1i",queries_percent,visits_percent,visits,clicks,orders,CTR,CVR,queries" full_relevancy_$dt.csv
+sed -i 1i",OVERALL_METRICS" full_relevancy_$dt.csv
+sed -i 11i"zero_result,number_of_zero_result_queries,number_of_zero_result_visits" full_relevancy_$dt.csv
+sed -i 13i",,,," full_relevancy_$dt.csv
+
+sed -i 14i",METRICS_FOR_10k" full_relevancy_$dt.csv
+sed -i 15i",queries_percent,visits_percent,visits,clicks,orders,CTR,CVR,queries" full_relevancy_$dt.csv
+sed -i 21i"zero_result,number_of_zero_result_queries,number_of_zero_result_visits" full_relevancy_$dt.csv
+sed -i 23i",,,," full_relevancy_$dt.csv
+
+sed -i 24i",METRICS_FOR_50k" full_relevancy_$dt.csv
+sed -i 25i",queries_percent,visits_percent,visits,clicks,orders,CTR,CVR,queries" full_relevancy_$dt.csv
+sed -i 31i"zero_result,number_of_zero_result_queries,number_of_zero_result_visits" full_relevancy_$dt.csv
+
+
+sed -i "3s/$dt/overall/" full_relevancy_$dt.csv
+sed -i "4s/$dt/top_10k/" full_relevancy_$dt.csv
+sed -i "5s/$dt/top_50k/" full_relevancy_$dt.csv
+sed -i "6s/$dt/good_q/" full_relevancy_$dt.csv
+sed -i "7s/$dt/bad_q/" full_relevancy_$dt.csv
+sed -i "8s/$dt/medium_q/" full_relevancy_$dt.csv
+sed -i "9s/$dt/partial_q/" full_relevancy_$dt.csv
+sed -i "10s/$dt/zero_ctr_q/" full_relevancy_$dt.csv
+sed -i "12s/$dt//" full_relevancy_$dt.csv
+
+
+sed -i "16s/$dt/ten_good_q/" full_relevancy_$dt.csv
+sed -i "17s/$dt/ten_medium_q/" full_relevancy_$dt.csv
+sed -i "18s/$dt/ten_bad_q/" full_relevancy_$dt.csv
+sed -i "19s/$dt/ten_partial_q/" full_relevancy_$dt.csv
+sed -i "20s/$dt/ten_zero_ctr_q/" full_relevancy_$dt.csv
+sed -i "22s/$dt//" full_relevancy_$dt.csv
+
+
+sed -i "26s/$dt/fifty_good_q/" full_relevancy_$dt.csv
+sed -i "27s/$dt/fifty_medium_q/" full_relevancy_$dt.csv
+sed -i "28s/$dt/fity_bad_q/" full_relevancy_$dt.csv
+sed -i "29s/$dt/fifty_partial_q/" full_relevancy_$dt.csv
+sed -i "30s/$dt/fifty_zero_ctr_q/" full_relevancy_$dt.csv
+sed -i "32s/$dt//" full_relevancy_$dt.csv
+
+
+cd ..
+cd ..
+cd dashboard
+cd autosuggest
+bash autosuggest.sh
+
+

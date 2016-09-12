@@ -54,9 +54,16 @@ Select a.date, a.deviceType, round(avg(a.position),0) as average_position, max(a
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
-Cart add through search (8055)
+Cart add through search (8055) - 
+
+Iteration1 - Issue:WAP recorder all buy button clicks as addToCarts
 
 select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, a.deviceType, count(*) as cartads from (select distinct dpYMD, deviceId, deviceType, pogId, timestamp from `last30Days(addToCart)`) a inner join (select distinct dpYMD, deviceId, deviceType, pogId, timestamp from `last30Days(searchResultClick)`) b on a.dpYMD=b.dpYMD and a.deviceId=b.deviceId and a.pogId=b.pogId where a.timestamp>=b.timestamp group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)), a.deviceType UNION ALL select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, a.deviceType, count(*) as cartads from (select distinct dpYMD, cookie, deviceType, pogId, timestamp from `last30Days(addToCart)`) a inner join (select distinct dpYMD, cookie, deviceType, pogId, timestamp from `last30Days(searchResultClick)`) b on a.dpYMD=b.dpYMD and a.cookie=b.cookie and a.pogId=b.pogId and a.deviceType=b.deviceType where a.timestamp>=b.timestamp group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)), a.deviceType
+
+Iteration2 - Solved the issue by taking union of buy and addToCart for all platforms
+
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, deviceType, sum(cartadds) as cartads from (select a.deviceType, a.dpYMD, count(distinct a.sessionId, a.pogId) as cartadds from addToCart a join searchResultClick c on a.sessionId = c.sessionId and a.pogId = c.pogId where a.dpYMD>=getYMD(0,0,-30) and a.dpYMD<=getYMD(0,0,-1) group by a.deviceType, a.dpYMD UNION select b.deviceType, b.dpYMD, count(distinct b.sessionId, b.pogId) as cartadds from buy b join searchResultClick c on b.sessionId = c.sessionId and b.pogId = c.pogId where b.dpYMD>=getYMD(0,0,-30) and b.dpYMD<=getYMD(0,0,-1) group by b.deviceType, b.dpYMD) abc group by deviceType, CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)
+
 
 
 ---------------------------------------------------------------------------------------------------------------------------------

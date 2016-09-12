@@ -1,0 +1,47 @@
+OVERALL METRICS
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Autosuggestion(9007)
+
+select a.dpYMD, round(sum(a.suggestedsearches)/sum(b.searches),2) from (select dpYMD, count(distinct sessionId, suggestionText) as suggestedsearches from searchSuggestionClick where dpYMD>='$sdt' and dpYMD<='$dt' group by dpYMD) a join (select dpYMD, count(distinct sessionId, keyword) as searches from searchResultView where dpYMD>='$sdt' and dpYMD<='$dt' group by deviceType, dpYMD) b on a.dpYMD=b.dpYMD and a.deviceType = b.deviceType group by a.dpYMD
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+CTR(9008)
+
+select keyword, searches, clicks, clicks/searches as CTR from (select a.keyword, count(distinct a.sessionId) as searches, count(distinct b.sessionId) as clicks from
+(select distinct keyword, sessionId from searchResultView as searches where dpYMD=getYMD(0,0,-1)) a left join (select keyword, sessionId from searchResultClick as clicks where dpYMD=getYMD(0,0,-1)) b on a.sessionId = b.sessionId and a.keyword = b.keyword group by a.keyword) c group by keyword, searches, clicks
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Searches returning Zero Results(9012)
+
+select CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2)) as date, round(avg(zero.zero_results)/avg(tot.searches),4) as pct_zero_results from (select dpYMD, deviceType, count(*) as zero_results from (select distinct dpYMD, deviceType, sessionId, typedKeyword from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and (resultsCount=0 or resultsCount is null)) a group by dpYMD, deviceType order by dpYMD, deviceType) as zero right join (select dpYMD, deviceType, count(*) as searches from (select distinct dpYMD, deviceType, sessionId, typedKeyword from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1)) a group by dpYMD, deviceType order by dpYMD, deviceType) as tot on zero.dpYMD=tot.dpYMD and zero.deviceType=tot.deviceType group by CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2))
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Searches with No Clicks(9015)
+
+select CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2)) as date, count(DISTINCT V.sessionId, V.keyword) Searches_with_noClicks from (select dpYMD, deviceType, sessionId, keyword from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and sessionId is not null group by dpYMD, sessionId, keyword, deviceType)V LEFT JOIN (select dpYMD, sessionId, deviceType, keyword from searchResultClick group by dpYMD, sessionId, keyword, deviceType)C on C.dpYMD=V.dpYMD and C.sessionId=V.sessionId and C.keyword=V.keyword and V.deviceType=C.deviceType where C.sessionId is null group by CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2))
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Search Users(9026)
+
+select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, count(*) as no_of_searchers from (select distinct dpYMD, deviceType, sessionId from `last30Days(searchResultView)`) a group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), deviceType order by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')a
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Searches(9027)
+
+select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, count(distinct keyword, sessionId) as searches from `last30Days(searchResultView)` group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DCPS(9002)
+
+select f1.dpYMD, round(avg(f1.rounded)/avg(f2.searches),2) as DCPS from (select t1.dpYMD, sum(t1.clicks/(case when t1.position=1 then 1 else log2(t1.position) end )) as rounded from (select dpYMD, position, count(*) as clicks from (select distinct dpYMD, deviceType, sessionId, typedKeyword, pogId, position from searchResultClick where dpYMD>=${Start_Date=20160717} and dpYMD<=${End_Date=20160717}) new1 group by dpYMD, position) as t1 group by t1.dpYMD) as f1 inner join (select dpYMD, sum(unique_query) as searches from (select dpYMD, deviceType, sessionId, count(distinct(typedKeyword)) as unique_query from searchResultView where dpYMD>=${Start_Date=20160717} and dpYMD<=${End_Date=20160717} and resultsCount!=0 group by dpYMD, deviceType, sessionId) v group by dpYMD) as f2 on f1.dpYMD=f2.dpYMD group by f1.dpYMD
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Items with Impressions(9004)
+
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, count(distinct results) as shown_pogs from (select distinct explode(results) as results, dpYMD from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and size(results)!=0) a group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2))
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Items Clicked(9006)
+
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, count(distinct pogId) from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2))

@@ -126,6 +126,8 @@ select CONCAT(SUBSTR(A.dpYMD,1,4),'-',SUBSTR(A.dpYMD,5,2),'-',SUBSTR(A.dpYMD,7,2
 Searches with no clicks (8508)
 
 select CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2)), V.deviceType as Device, count(DISTINCT V.sessionId, V.keyword) Searches_with_noClicks from (select dpYMD, deviceType, sessionId, keyword from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and sessionId is not null group by dpYMD, sessionId, keyword, deviceType)V LEFT JOIN (select dpYMD, sessionId, deviceType, keyword from searchResultClick group by dpYMD, sessionId, keyword, deviceType)C on C.dpYMD=V.dpYMD and C.sessionId=V.sessionId and C.keyword=V.keyword and V.deviceType=C.deviceType where C.sessionId is null group by CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2)), V.deviceType
+UNION
+select CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2)), "Overall" as Device, count(DISTINCT V.sessionId, V.keyword) Searches_with_noClicks from (select dpYMD, sessionId, keyword from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and sessionId is not null group by dpYMD, sessionId, keyword)V LEFT JOIN (select dpYMD, sessionId, keyword from searchResultClick group by dpYMD, sessionId, keyword)C on C.dpYMD=V.dpYMD and C.sessionId=V.sessionId and C.keyword=V.keyword where C.sessionId is null group by CONCAT(SUBSTR(V.dpYMD,1,4),'-',SUBSTR(V.dpYMD,5,2),'-',SUBSTR(V.dpYMD,7,2))
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
@@ -138,12 +140,16 @@ select CONCAT(SUBSTR(CT.dpYMD,1,4),'-',SUBSTR(CT.dpYMD,5,2),'-',SUBSTR(CT.dpYMD,
 Items with clicks (8833)
 
 select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, deviceType, count(distinct pogId) from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)), deviceType
+UNION
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, "Overall" as deviceType, count(distinct pogId) from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2))
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Items with impressions (8834)
 
-select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, deviceType, count(distinct results) as shown_pogs from (select distinct explode(results) as results, deviceType, dpYMD from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and size(results)!=0) a group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)), deviceType", "alias":"ItemswithImpressions
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, deviceType, count(distinct results) as shown_pogs from (select distinct explode(results) as results, deviceType, dpYMD from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and size(results)!=0) a group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)), deviceType
+UNION
+select CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, "Overall" as deviceType, count(distinct results) as shown_pogs from (select distinct explode(results) as results, dpYMD from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) and size(results)!=0) a group by CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2))
 
 
 

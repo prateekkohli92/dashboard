@@ -43,13 +43,16 @@ select from_unixtime(unix_timestamp(cast(t1.dpYMD as string),'yyyyMMdd'), 'yyyy-
 CTR (7647)
 
 select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, a.deviceType, round(sum(a.clicks)/sum(b.searches),4) from (select dpYMD, count(distinct sessionId, typedKeyword) as clicks, deviceType from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD, deviceType) a left join (select dpYMD, count(distinct sessionId, keyword) as searches, deviceType from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD, deviceType) b on a.dpYMD = b.dpYMD and a.deviceType = b.deviceType group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)), a.deviceType
+UNION
+select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, "Overall" as deviceType, round(sum(a.clicks)/sum(b.searches),4) from (select dpYMD, count(distinct sessionId, typedKeyword) as clicks from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD) a left join (select dpYMD, count(distinct sessionId, keyword) as searches from searchResultView where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD) b on a.dpYMD = b.dpYMD group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2))
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Autosuggestion usage (7648)
 
 select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, a.deviceType, round(sum(a.suggestedsearches)/sum(b.searches),4) from (select dpYMD, deviceType, count(distinct sessionId, suggestionText) as suggestedsearches from `last30Days(searchSuggestionClick)` group by deviceType, dpYMD) a join (select dpYMD, deviceType, count(distinct sessionId, keyword) as searches from `last30Days(searchResultView)` group by deviceType, dpYMD) b on a.dpYMD=b.dpYMD and a.deviceType = b.deviceType group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)), a.deviceType
-
+UNION
+select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2)) as date, "Overall" as deviceType, round(sum(a.suggestedsearches)/sum(b.searches),4) from (select dpYMD, count(distinct sessionId, suggestionText) as suggestedsearches from `last30Days(searchSuggestionClick)` group by dpYMD) a join (select dpYMD, count(distinct sessionId, keyword) as searches from `last30Days(searchResultView)` group by dpYMD) b on a.dpYMD=b.dpYMD and group by CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2))
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Searches returning zero results (8053)

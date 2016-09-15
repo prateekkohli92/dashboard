@@ -6,28 +6,38 @@ select from_unixtime(unix_timestamp(cast(CT.dpYMD as string),'yyyyMMdd'), 'yyyy-
 DCPS by platform (7162)
 
 select from_unixtime(unix_timestamp(cast(f1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, f1.deviceType, round(avg(f1.rounded)/avg(f2.searches),2) as DCPS from (select t1.dpYMD, t1.deviceType, sum(t1.clicks/(case when t1.position=1 then 1 else log2(t1.position) end )) as rounded from (select dpYMD, deviceType, position, count(*) as clicks from (select distinct dpYMD, deviceType, sessionId, typedKeyword, pogId, position from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1)) new1 group by dpYMD, deviceType, position) as t1 group by t1.dpYMD, t1.deviceType) as f1 inner join (select dpYMD, deviceType, sum(unique_query) as searches from (select dpYMD, deviceType, sessionId, count(distinct(typedKeyword)) as unique_query from searchResultView where resultsCount!=0 and dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD, deviceType, sessionId) v group by dpYMD, deviceType) as f2 on f1.dpYMD=f2.dpYMD and f1.deviceType=f2.deviceType group by from_unixtime(unix_timestamp(cast(f1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), f1.deviceType
+UNION
+select from_unixtime(unix_timestamp(cast(f1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, "Overall" as deviceType, round(avg(f1.rounded)/avg(f2.searches),2) as DCPS from (select t1.dpYMD, sum(t1.clicks/(case when t1.position=1 then 1 else log2(t1.position) end )) as rounded from (select dpYMD, position, count(*) as clicks from (select distinct dpYMD, sessionId, typedKeyword, pogId, position from searchResultClick where dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1)) new1 group by dpYMD, position) as t1 group by t1.dpYMD) as f1 inner join (select dpYMD, sum(unique_query) as searches from (select dpYMD, sessionId, count(distinct(typedKeyword)) as unique_query from searchResultView where resultsCount!=0 and dpYMD>=getYMD(0,0,-30) and dpYMD<=getYMD(0,0,-1) group by dpYMD, sessionId) v group by dpYMD) as f2 on f1.dpYMD=f2.dpYMD group by from_unixtime(unix_timestamp(cast(f1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Searches by platform (7167)
 
 select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, deviceType, count(distinct keyword, sessionId) as searches from `last30Days(searchResultView)` group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'),deviceType
+UNION
+select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, "Overall" as deviceType, count(distinct keyword, sessionId) as searches from `last30Days(searchResultView)` group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Searchers % by platform (7177)
 
 select from_unixtime(unix_timestamp(cast(total.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, total.deviceType, round(avg(searches.srchs)/avg(total.tot),2) as search_usage_pct from (select dpYMD, deviceType, count(*) as tot from (select distinct dpYMD, deviceType, sessionId from `last30Days(clickstream)` ) a group by dpYMD, deviceType) total left join (select dpYMD, deviceType, count(*) as srchs from (select distinct dpYMD, deviceType, sessionId from `last30Days(searchResultView)`) b group by dpYMD, deviceType) searches on total.dpYMD=searches.dpYMD and total.deviceType=searches.deviceType group by from_unixtime(unix_timestamp(cast(total.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), total.deviceType
+UNION
+select from_unixtime(unix_timestamp(cast(total.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, "Overall" as deviceType, round(avg(searches.srchs)/avg(total.tot),2) as search_usage_pct from (select dpYMD, count(*) as tot from (select distinct dpYMD, sessionId from `last30Days(clickstream)` ) a group by dpYMD) total left join (select dpYMD, count(*) as srchs from (select distinct dpYMD, sessionId from `last30Days(searchResultView)`) b group by dpYMD) searches on total.dpYMD=searches.dpYMD group by from_unixtime(unix_timestamp(cast(total.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')
 
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Number of searchers (7179)
 
 select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, deviceType, count(*) as no_of_searches from (select distinct dpYMD, deviceType, sessionId from `last30Days(searchResultView)`) a group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), deviceType order by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), deviceType
+UNION
+select from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, "Overall" as deviceType, count(*) as no_of_searches from (select distinct dpYMD, sessionId from `last30Days(searchResultView)`) a group by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') order by from_unixtime(unix_timestamp(cast(dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd')
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Searches per session (7180)
 
 select from_unixtime(unix_timestamp(cast(t1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, t1.deviceType, if(isnull(t2.searches),0,(t2.searches)) as searches, count(*) as count from (select distinct dpYMD, deviceType, sessionId from `last30Days(clickstream)` where sessionId is not null group by dpYMD, deviceType, sessionId) t1 left join (select dpYMD, deviceType, sessionId, count(*) as searches from (select distinct dpYMD, deviceType, sessionId, typedKeyword from `last30Days(searchResultView)` where sessionId is not null group by dpYMD, deviceType, sessionId, typedKeyword) b group by dpYMD, deviceType, sessionId) t2 on t1.dpYMD=t2.dpYMD and t1.deviceType=t2.deviceType and t1.sessionId=t2.sessionId group by from_unixtime(unix_timestamp(cast(t1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), t1.deviceType, t2.searches
+UNION
+select from_unixtime(unix_timestamp(cast(t1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd') as date, "Overall" as deviceType, if(isnull(t2.searches),0,(t2.searches)) as searches, count(*) as count from (select distinct dpYMD, sessionId from `last30Days(clickstream)` where sessionId is not null group by dpYMD, sessionId) t1 left join (select dpYMD, sessionId, count(*) as searches from (select distinct dpYMD, sessionId, typedKeyword from `last30Days(searchResultView)` where sessionId is not null group by dpYMD, sessionId, typedKeyword) b group by dpYMD, sessionId) t2 on t1.dpYMD=t2.dpYMD and t1.sessionId=t2.sessionId group by from_unixtime(unix_timestamp(cast(t1.dpYMD as string),'yyyyMMdd'), 'yyyy-MM-dd'), t2.searches
 
 ---------------------------------------------------------------------------------------------------------------------------------
 CTR (7647)

@@ -58,13 +58,15 @@ select CONCAT(SUBSTR(a.dpYMD,1,4),'-',SUBSTR(a.dpYMD,5,2),'-',SUBSTR(a.dpYMD,7,2
 Searches returning zero results (8053)
 
 select CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2)) as date, zero.deviceType, round(avg(zero.zero_results)/avg(tot.searches),4) as pct_zero_results from (select dpYMD, deviceType, count(*) as zero_results from (select distinct dpYMD, deviceType, sessionId, typedKeyword from `last30Days(searchResultView)` Where (resultsCount=0 or resultsCount is null)) a group by dpYMD, deviceType order by dpYMD, deviceType) as zero right join (select dpYMD, deviceType, count(*) as searches from (select distinct dpYMD, deviceType, sessionId, typedKeyword from `last30Days(searchResultView)` ) a group by dpYMD, deviceType order by dpYMD, deviceType) as tot on zero.dpYMD=tot.dpYMD and zero.deviceType=tot.deviceType group by CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2)), zero.deviceType
-
+UNION
+select CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2)) as date, "Overall" as deviceType, round(avg(zero.zero_results)/avg(tot.searches),4) as pct_zero_results from (select dpYMD, count(*) as zero_results from (select distinct dpYMD, sessionId, typedKeyword from `last30Days(searchResultView)` Where (resultsCount=0 or resultsCount is null)) a group by dpYMD order by dpYMD) as zero right join (select dpYMD, count(*) as searches from (select distinct dpYMD, sessionId, typedKeyword from `last30Days(searchResultView)` ) a group by dpYMD order by dpYMD) as tot on zero.dpYMD=tot.dpYMD group by CONCAT(SUBSTR(zero.dpYMD,1,4),'-',SUBSTR(zero.dpYMD,5,2),'-',SUBSTR(zero.dpYMD,7,2))
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Click depth (8054)
 
 Select a.date, a.deviceType, round(avg(a.position),0) as average_position, max(a.position) as max_position, percentile(cast(a.position as BIGINT),0.5) as median_position from (Select Distinct CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, deviceType, sessionId, pogId, position from `last30Days(searchResultClick)` ) a Group by a.date, a.deviceType
-
+UNION
+Select a.date, "Overall" as deviceType, round(avg(a.position),0) as average_position, max(a.position) as max_position, percentile(cast(a.position as BIGINT),0.5) as median_position from (Select Distinct CONCAT(SUBSTR(dpYMD,1,4),'-',SUBSTR(dpYMD,5,2),'-',SUBSTR(dpYMD,7,2)) as date, sessionId, pogId, position from `last30Days(searchResultClick)`) a Group by a.date
 
 ---------------------------------------------------------------------------------------------------------------------------------
 Cart add through search (8055) - 
